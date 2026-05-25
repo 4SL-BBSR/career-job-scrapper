@@ -21,7 +21,6 @@ app.use(
   })
 );
 app.use(express.json());
-app.options("*", cors());
 
 app.get("/health", async (_req, res) => {
   try {
