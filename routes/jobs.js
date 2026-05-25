@@ -1,13 +1,13 @@
-const express = require("express");
+import express from "express";
+
+import db from "../db.js";
+
 const router = express.Router();
-const db = require("../db");
 
-// GET ALL JOBS
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const { search, location, company } = req.query;
-
   let query = "SELECT * FROM jobs WHERE 1=1";
-  let params = [];
+  const params = [];
 
   if (search) {
     query += " AND title LIKE ?";
@@ -24,18 +24,21 @@ router.get("/", (req, res) => {
     params.push(`%${company}%`);
   }
 
-  db.query(query, params, (err, result) => {
-    if (err) return res.status(500).send(err);
-    res.json(result);
-  });
+  try {
+    const [rows] = await db.execute(query, params);
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-
-// GET JOB BY ID
-router.get("/:id", (req, res) => {
-  db.query("SELECT * FROM jobs WHERE id = ?", [req.params.id], (err, result) => {
-    res.json(result[0]);
-  });
+router.get("/:id", async (req, res) => {
+  try {
+    const [rows] = await db.execute("SELECT * FROM jobs WHERE id = ?", [req.params.id]);
+    res.json(rows[0] || null);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-module.exports = router;
+export default router;
